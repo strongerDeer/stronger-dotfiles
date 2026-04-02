@@ -14,6 +14,9 @@ mkdir -p ~/.claude
 ln -sf "$DOTFILES_DIR/claude/CLAUDE.md" ~/.claude/CLAUDE.md
 echo "  ✅ claude/CLAUDE.md → ~/.claude/CLAUDE.md"
 
+ln -sf "$DOTFILES_DIR/claude/skills" ~/.claude/skills
+echo "  ✅ claude/skills/ → ~/.claude/skills (글로벌 Claude 스킬)"
+
 # ─── Git 전역 설정 ────────────────────────────────────────────
 ln -sf "$DOTFILES_DIR/git/.gitignore_global" ~/.gitignore_global
 git config --global core.excludesfile ~/.gitignore_global
