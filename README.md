@@ -33,6 +33,7 @@ dotfiles/
   git/
     .gitignore_global            # 전역 gitignore (모든 프로젝트에 자동 적용)
     .gitmessage                  # 커밋 메시지 템플릿 (Jira 스마트 커밋 포함)
+    .gitconfig_aliases           # 전역 git alias (merge-main, branch-clear 등)
   scripts/
     project-init.sh              # 새 프로젝트 초기화 스크립트
     validate-commit-msg.js       # Jira 스마트 커밋 감지 스크립트
@@ -77,6 +78,7 @@ git pull origin main
 | `~/.claude/skills/`   | Claude 글로벌 스킬 8종 (심볼릭 링크)                        |
 | `~/.gitignore_global` | 전역 gitignore (심볼릭 링크)                                 |
 | `~/.gitmessage`       | 커밋 메시지 템플릿 (심볼릭 링크)                             |
+| `~/.gitconfig_aliases` | 전역 git alias (심볼릭 링크, `include.path`로 자동 적용)   |
 | `~/.zshrc`            | `DOTFILES` 환경변수 + `project-init`, `jira-open` 등 명령어 등록 |
 
 ### 3. 적용
@@ -263,6 +265,18 @@ git pull
 
 > Prettier는 런타임 참조 방식이라 `git pull`만 해도 즉시 반영됩니다.
 > ESLint 등 복사 방식 파일은 프로젝트에서 수동으로 업데이트해야 합니다.
+
+---
+
+## Git Alias
+
+`setup.sh` 실행 시 `~/.gitconfig_aliases`가 전역 git 설정에 자동 포함됩니다.
+
+| alias            | 설명                                                     |
+| ---------------- | -------------------------------------------------------- |
+| `git merge-main`    | develop → main 머지 후 develop으로 복귀                 |
+| `git merge-release` | develop → release 머지 후 develop으로 복귀              |
+| `git branch-clear`  | main, develop, release, master, pre_dev 제외 브랜치 삭제 |
 
 ---
 

@@ -26,6 +26,10 @@ ln -sf "$DOTFILES_DIR/git/.gitmessage" ~/.gitmessage
 git config --global commit.template ~/.gitmessage
 echo "  ✅ git/.gitmessage → ~/.gitmessage (커밋 템플릿)"
 
+ln -sf "$DOTFILES_DIR/git/.gitconfig_aliases" ~/.gitconfig_aliases
+git config --global include.path ~/.gitconfig_aliases
+echo "  ✅ git/.gitconfig_aliases → ~/.gitconfig_aliases (git alias)"
+
 # ─── 환경변수 & shell 함수 (.zshrc) ───────────────────────────
 ZSHRC="$HOME/.zshrc"
 

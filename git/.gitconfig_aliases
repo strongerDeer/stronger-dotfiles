@@ -1,0 +1,9 @@
+[alias]
+  # develop → main 머지 후 develop으로 복귀
+  merge-main = "!git checkout main && git merge --no-ff develop -m \"Merge develop into main\" && git push origin main && git checkout develop"
+
+  # develop → release 머지 후 develop으로 복귀
+  merge-release = "!git checkout release && git merge --no-ff develop -m \"Merge develop into release\" && git push origin release && git checkout develop"
+
+  # main, develop, release, master 제외 브랜치 모두 삭제
+  branch-clear = "!git branch | grep -vE 'main|develop|release|master|pre_dev|\\*' | xargs git branch -D"
