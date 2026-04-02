@@ -1,9 +1,9 @@
 /**
  * Commitizen 기본 설정 (dotfiles base)
  * - project-init 실행 시 프로젝트 루트에 .cz-config.js로 복사됨
- * - 타입 목록은 configs/commit-types.js에서 단일 관리
+ * - 타입 목록은 configs/commit/types.js에서 단일 관리
  */
-const COMMIT_TYPES = require(`${process.env.DOTFILES}/configs/commit-types`);
+const COMMIT_TYPES = require(`${process.env.DOTFILES}/configs/commit/types`);
 
 module.exports = {
   types: COMMIT_TYPES.map(({ emoji, type, desc }) => ({

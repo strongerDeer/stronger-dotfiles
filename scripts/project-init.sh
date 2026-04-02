@@ -22,7 +22,7 @@ echo ""
 if [ ! -f ".prettierrc.js" ]; then
   cat > .prettierrc.js << 'EOF'
 /** @type {import("prettier").Config} */
-const base = require(`${process.env.DOTFILES}/configs/prettier/base.js`);
+const base = require(`${process.env.DOTFILES}/configs/lint/prettier.js`);
 
 module.exports = {
   ...base,
@@ -36,7 +36,7 @@ fi
 
 # ─── eslint.config.mjs ────────────────────────────────────────
 if [ ! -f "eslint.config.mjs" ]; then
-  cp "$DOTFILES/configs/eslint/base.mjs" eslint.config.mjs
+  cp "$DOTFILES/configs/lint/eslint.mjs" eslint.config.mjs
   echo "  ✅ eslint.config.mjs"
 else
   echo "  ⏭️  eslint.config.mjs (이미 존재)"
@@ -53,7 +53,7 @@ fi
 
 # ─── .commitlintrc.js ─────────────────────────────────────────
 if [ ! -f ".commitlintrc.js" ]; then
-  cp "$DOTFILES/configs/commitlint/base.js" .commitlintrc.js
+  cp "$DOTFILES/configs/commit/commitlint.js" .commitlintrc.js
   echo "  ✅ .commitlintrc.js"
 else
   echo "  ⏭️  .commitlintrc.js (이미 존재)"
@@ -77,7 +77,7 @@ fi
 
 # ─── .cz-config.js (Commitizen) ───────────────────────────────
 if [ ! -f ".cz-config.js" ]; then
-  cp "$DOTFILES/configs/commitizen/base.js" .cz-config.js
+  cp "$DOTFILES/configs/commit/commitizen.js" .cz-config.js
   echo "  ✅ .cz-config.js"
 else
   echo "  ⏭️  .cz-config.js (이미 존재)"
@@ -94,9 +94,9 @@ fi
 # ─── .husky/ hooks ────────────────────────────────────────────
 if [ ! -d ".husky" ]; then
   mkdir -p .husky
-  cp "$DOTFILES/configs/husky/pre-commit" .husky/pre-commit
-  cp "$DOTFILES/configs/husky/commit-msg" .husky/commit-msg
-  cp "$DOTFILES/configs/husky/prepare-commit-msg" .husky/prepare-commit-msg
+  cp "$DOTFILES/configs/lint/hooks/pre-commit" .husky/pre-commit
+  cp "$DOTFILES/configs/commit/hooks/commit-msg" .husky/commit-msg
+  cp "$DOTFILES/configs/commit/hooks/prepare-commit-msg" .husky/prepare-commit-msg
   chmod +x .husky/pre-commit .husky/commit-msg .husky/prepare-commit-msg
   echo "  ✅ .husky/ (pre-commit, commit-msg, prepare-commit-msg)"
 else

@@ -7,22 +7,29 @@
 ```
 dotfiles/
   configs/
-    prettier/base.js             # Prettier 기준 설정
-    eslint/base.mjs              # ESLint 기준 설정
-    vscode/settings.json         # VS Code 기준 설정
-    commitlint/base.js           # 커밋린트 기준 설정
-    commitizen/base.js           # Commitizen 타입 목록 (commitlint와 동기화)
-    node/.nvmrc                  # Node.js 기본 버전 (LTS)
-    git/.gitignore               # 프로젝트 gitignore 기준
-    husky/
-      pre-commit                 # lint + type-check
-      commit-msg                 # commitlint + Jira 스마트 커밋 감지
-      prepare-commit-msg         # .gitmessage 템플릿 삽입
+    commit/
+      types.js                   # 커밋 타입 단일 소스
+      commitizen.js              # Commitizen 설정
+      commitlint.js              # commitlint 설정
+      hooks/
+        commit-msg               # commitlint + Jira 스마트 커밋 감지
+        prepare-commit-msg       # .gitmessage 템플릿 삽입
+    lint/
+      eslint.mjs                 # ESLint 기준 설정
+      prettier.js                # Prettier 기준 설정
+      hooks/
+        pre-commit               # lint + type-check
+    git/
+      .gitignore                 # 프로젝트 gitignore 기준
     github/
       PULL_REQUEST_TEMPLATE.md   # PR 템플릿
       workflows/
         jira-pr-merged.yml       # PR 머지 시 Jira 티켓 자동 완료
         create-jira-only.yml     # 수동 Jira 이슈 생성
+    node/
+      .nvmrc                     # Node.js 기본 버전 (LTS)
+    vscode/
+      settings.json              # VS Code 기준 설정
   git/
     .gitignore_global            # 전역 gitignore (모든 프로젝트에 자동 적용)
     .gitmessage                  # 커밋 메시지 템플릿 (Jira 스마트 커밋 포함)
@@ -83,7 +90,7 @@ project-init
 
 | 파일                              | 방식        | 설명                                        |
 | --------------------------------- | ----------- | ------------------------------------------- |
-| `.prettierrc.js`                  | 런타임 참조 | `$DOTFILES/configs/prettier/base.js`를 참조 |
+| `.prettierrc.js`                  | 런타임 참조 | `$DOTFILES/configs/lint/prettier.js`를 참조 |
 | `eslint.config.mjs`               | 복사        | base 설정 복사 후 프로젝트에서 수정 가능    |
 | `.vscode/settings.json`           | 복사        | 저장 시 자동 포맷 + ESLint 수정             |
 | `.commitlintrc.js`                | 복사        | 커밋 타입/이모지 규칙                       |

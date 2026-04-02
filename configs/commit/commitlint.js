@@ -1,9 +1,9 @@
 /**
  * commitlint 기본 설정 (dotfiles base)
  * - project-init 실행 시 프로젝트 루트에 .commitlintrc.js로 복사됨
- * - 타입 목록은 configs/commit-types.js에서 단일 관리
+ * - 타입 목록은 configs/commit/types.js에서 단일 관리
  */
-const COMMIT_TYPES = require(`${process.env.DOTFILES}/configs/commit-types`);
+const COMMIT_TYPES = require(`${process.env.DOTFILES}/configs/commit/types`);
 
 const TYPE_LIST = COMMIT_TYPES.map(({ emoji, type }) => `${emoji} ${type}`);
 const EMOJIS = COMMIT_TYPES.map(({ emoji }) => emoji).join('|');
