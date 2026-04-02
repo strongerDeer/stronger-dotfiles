@@ -7,22 +7,33 @@
 ```
 dotfiles/
   configs/
-    prettier/base.js        # Prettier 기준 설정
-    eslint/base.mjs         # ESLint 기준 설정
-    vscode/settings.json    # VS Code 기준 설정
-    commitlint/base.js      # 커밋린트 기준 설정
-    node/.nvmrc             # Node.js 기본 버전 (LTS)
-    git/.gitignore          # 프로젝트 gitignore 기준
+    prettier/base.js             # Prettier 기준 설정
+    eslint/base.mjs              # ESLint 기준 설정
+    vscode/settings.json         # VS Code 기준 설정
+    commitlint/base.js           # 커밋린트 기준 설정
+    commitizen/base.js           # Commitizen 타입 목록 (commitlint와 동기화)
+    node/.nvmrc                  # Node.js 기본 버전 (LTS)
+    git/.gitignore               # 프로젝트 gitignore 기준
+    husky/
+      pre-commit                 # lint + type-check
+      commit-msg                 # commitlint + Jira 스마트 커밋 감지
+      prepare-commit-msg         # .gitmessage 템플릿 삽입
+    github/
+      PULL_REQUEST_TEMPLATE.md   # PR 템플릿
+      workflows/
+        jira-pr-merged.yml       # PR 머지 시 Jira 티켓 자동 완료
+        create-jira-only.yml     # 수동 Jira 이슈 생성
   git/
-    .gitignore_global       # 전역 gitignore (모든 프로젝트에 자동 적용)
-    .gitmessage             # 커밋 메시지 템플릿
+    .gitignore_global            # 전역 gitignore (모든 프로젝트에 자동 적용)
+    .gitmessage                  # 커밋 메시지 템플릿 (Jira 스마트 커밋 포함)
   scripts/
-    project-init.sh         # 새 프로젝트 초기화 스크립트
+    project-init.sh              # 새 프로젝트 초기화 스크립트
+    validate-commit-msg.js       # Jira 스마트 커밋 감지 스크립트
   shell/
-    functions.zsh           # shell 함수 (project-init 명령어)
+    functions.zsh                # shell 함수 (project-init 명령어)
   claude/
-    CLAUDE.md               # Claude Code 글로벌 컨벤션
-  setup.sh                  # 새 PC 연동 스크립트
+    CLAUDE.md                    # Claude Code 글로벌 컨벤션
+  setup.sh                       # 새 PC 연동 스크립트
 ```
 
 ---
@@ -70,16 +81,74 @@ project-init
 
 생성되는 파일:
 
-| 파일                    | 방식        | 설명                                        |
-| ----------------------- | ----------- | ------------------------------------------- |
-| `.prettierrc.js`        | 런타임 참조 | `$DOTFILES/configs/prettier/base.js`를 참조 |
-| `eslint.config.mjs`     | 복사        | base 설정 복사 후 프로젝트에서 수정 가능    |
-| `.vscode/settings.json` | 복사        | 저장 시 자동 포맷 + ESLint 수정             |
-| `.commitlintrc.js`      | 복사        | 커밋 타입/이모지 규칙                       |
-| `.nvmrc`                | 복사        | Node.js 기본 버전                           |
-| `.gitignore`            | 복사        | 공통 ignore 패턴                            |
+| 파일                              | 방식        | 설명                                        |
+| --------------------------------- | ----------- | ------------------------------------------- |
+| `.prettierrc.js`                  | 런타임 참조 | `$DOTFILES/configs/prettier/base.js`를 참조 |
+| `eslint.config.mjs`               | 복사        | base 설정 복사 후 프로젝트에서 수정 가능    |
+| `.vscode/settings.json`           | 복사        | 저장 시 자동 포맷 + ESLint 수정             |
+| `.commitlintrc.js`                | 복사        | 커밋 타입/이모지 규칙                       |
+| `.cz-config.js`                   | 복사        | Commitizen 인터랙티브 커밋 CLI              |
+| `.nvmrc`                          | 복사        | Node.js 기본 버전                           |
+| `.gitignore`                      | 복사        | 공통 ignore 패턴                            |
+| `.gitmessage`                     | 복사        | 커밋 메시지 템플릿 (prepare-commit-msg 훅에서 사용) |
+| `.husky/pre-commit`               | 복사        | 커밋 전 lint + type-check                   |
+| `.husky/commit-msg`               | 복사        | commitlint + Jira 스마트 커밋 감지          |
+| `.husky/prepare-commit-msg`       | 복사        | .gitmessage 템플릿 자동 삽입                |
+| `scripts/validate-commit-msg.js`  | 복사        | Jira 이슈 키 감지 스크립트                  |
 
 > 이미 파일이 존재하면 덮어쓰지 않고 건너뜁니다.
+
+### Jira 워크플로우 포함 설치
+
+Jira 연동 GitHub Actions까지 함께 설치하려면 `WITH_JIRA=true`를 붙입니다.
+
+```bash
+WITH_JIRA=true project-init
+```
+
+추가로 생성되는 파일:
+
+| 파일                                          | 설명                              |
+| --------------------------------------------- | --------------------------------- |
+| `.github/PULL_REQUEST_TEMPLATE.md`            | PR 템플릿                         |
+| `.github/workflows/jira-pr-merged.yml`        | PR 머지 시 Jira 티켓 자동 완료    |
+| `.github/workflows/create-jira-only.yml`      | 수동 Jira 이슈 생성 워크플로우    |
+
+Jira 워크플로우 동작을 위해 GitHub Repository Secrets에 아래 항목을 등록해야 합니다.
+
+| Secret 키          | 설명                            |
+| ------------------ | ------------------------------- |
+| `JIRA_BASE_URL`    | Jira 베이스 URL (예: `https://yourcompany.atlassian.net`) |
+| `JIRA_API_TOKEN`   | Jira API 토큰                   |
+| `JIRA_USER_EMAIL`  | Jira 계정 이메일                |
+| `JIRA_PROJECT`     | Jira 프로젝트 키 (예: `PROJ`)   |
+
+### Husky + Commitizen 패키지 설치
+
+`project-init` 실행 후 패키지를 설치하고 `package.json`을 설정합니다.
+
+```bash
+npm install -D husky commitizen cz-customizable @commitlint/cli
+npx husky install
+```
+
+`package.json`에 아래 항목을 추가합니다.
+
+```json
+{
+  "scripts": {
+    "commit": "cz",
+    "prepare": "husky || exit 0"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-customizable"
+    }
+  }
+}
+```
+
+이후 `npm run commit`으로 인터랙티브 커밋 CLI를 사용할 수 있습니다.
 
 ---
 
@@ -136,6 +205,7 @@ rules: {
 | `🎨 UI/UX`    | 사용자 인터페이스 변경       |
 | `➕ Add`      | 의존성 추가                  |
 | `🔥 Remove`   | 코드/파일 삭제               |
+| `🔍 SEO`      | 검색 엔진 최적화             |
 | `🔧 Chore`    | 기타 변경사항                |
 | `🏗️ Build`    | 빌드 관련 수정               |
 | `👷 CI`       | CI 설정 수정                 |

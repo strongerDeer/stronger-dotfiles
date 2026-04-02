@@ -75,6 +75,58 @@ else
   echo "  ⏭️  .gitignore (이미 존재)"
 fi
 
+# ─── .cz-config.js (Commitizen) ───────────────────────────────
+if [ ! -f ".cz-config.js" ]; then
+  cp "$DOTFILES/configs/commitizen/base.js" .cz-config.js
+  echo "  ✅ .cz-config.js"
+else
+  echo "  ⏭️  .cz-config.js (이미 존재)"
+fi
+
+# ─── .gitmessage ──────────────────────────────────────────────
+if [ ! -f ".gitmessage" ]; then
+  cp "$DOTFILES/git/.gitmessage" .gitmessage
+  echo "  ✅ .gitmessage"
+else
+  echo "  ⏭️  .gitmessage (이미 존재)"
+fi
+
+# ─── .husky/ hooks ────────────────────────────────────────────
+if [ ! -d ".husky" ]; then
+  mkdir -p .husky
+  cp "$DOTFILES/configs/husky/pre-commit" .husky/pre-commit
+  cp "$DOTFILES/configs/husky/commit-msg" .husky/commit-msg
+  cp "$DOTFILES/configs/husky/prepare-commit-msg" .husky/prepare-commit-msg
+  chmod +x .husky/pre-commit .husky/commit-msg .husky/prepare-commit-msg
+  echo "  ✅ .husky/ (pre-commit, commit-msg, prepare-commit-msg)"
+else
+  echo "  ⏭️  .husky/ (이미 존재)"
+fi
+
+# ─── scripts/validate-commit-msg.js ──────────────────────────
+if [ ! -f "scripts/validate-commit-msg.js" ]; then
+  mkdir -p scripts
+  cp "$DOTFILES/scripts/validate-commit-msg.js" scripts/validate-commit-msg.js
+  echo "  ✅ scripts/validate-commit-msg.js"
+else
+  echo "  ⏭️  scripts/validate-commit-msg.js (이미 존재)"
+fi
+
+# ─── .github/ (PR 템플릿 + Jira 워크플로우) ──────────────────
+# Jira 연동 워크플로우는 선택사항 (--jira 플래그로 설치)
+if [ "${WITH_JIRA:-false}" = "true" ]; then
+  if [ ! -f ".github/PULL_REQUEST_TEMPLATE.md" ]; then
+    mkdir -p .github/workflows
+    cp "$DOTFILES/configs/github/PULL_REQUEST_TEMPLATE.md" .github/PULL_REQUEST_TEMPLATE.md
+    cp "$DOTFILES/configs/github/workflows/jira-pr-merged.yml" .github/workflows/jira-pr-merged.yml
+    cp "$DOTFILES/configs/github/workflows/create-jira-only.yml" .github/workflows/create-jira-only.yml
+    echo "  ✅ .github/ (PR 템플릿 + Jira 워크플로우)"
+    echo "     ⚠️  GitHub Secrets 설정 필요: JIRA_BASE_URL, JIRA_API_TOKEN, JIRA_USER_EMAIL, JIRA_PROJECT"
+  else
+    echo "  ⏭️  .github/ (이미 존재)"
+  fi
+fi
+
 echo ""
 echo "✅ 프로젝트 초기화 완료!"
 echo ""
@@ -87,3 +139,14 @@ echo "       eslint-plugin-prettier eslint-config-prettier"
 echo ""
 echo "  2. Prettier 패키지 설치 (필요 시):"
 echo "     npm install -D prettier"
+echo ""
+echo "  3. Commitizen + Husky 패키지 설치 (필요 시):"
+echo "     npm install -D husky commitizen cz-customizable @commitlint/cli @commitlint/config-conventional"
+echo "     npx husky install"
+echo ""
+echo "  4. package.json에 아래 항목 추가 (필요 시):"
+echo '     "scripts": { "commit": "cz", "prepare": "husky || exit 0" }'
+echo '     "config": { "commitizen": { "path": "cz-customizable" } }'
+echo ""
+echo "  5. Jira 워크플로우 설치 (선택사항):"
+echo "     WITH_JIRA=true project-init"

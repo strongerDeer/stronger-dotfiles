@@ -1,0 +1,11 @@
+#!/bin/sh
+# commit-msg: 커밋 메시지 형식 검증
+# project-init 시 .husky/commit-msg 으로 복사됨
+
+# 1. commitlint로 커밋 메시지 형식 검증
+npx --no -- commitlint --edit "$1"
+
+# 2. Jira 스마트 커밋 감지 및 안내 (scripts/validate-commit-msg.js 필요)
+if [ -f "scripts/validate-commit-msg.js" ]; then
+  node scripts/validate-commit-msg.js "$1"
+fi

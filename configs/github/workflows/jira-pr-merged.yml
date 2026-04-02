@@ -1,0 +1,155 @@
+name: Jira Auto Complete on PR Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+
+jobs:
+  auto-complete-jira:
+    name: Auto Complete Jira Ticket
+    runs-on: ubuntu-latest
+
+    # PR이 실제로 머지된 경우에만 실행
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract Jira ticket from branch name
+        id: extract-ticket
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          echo "Branch name: $BRANCH_NAME"
+
+          # 정규식으로 Jira 티켓 추출 (예: AUR-6-fe-task-pr → AUR-6)
+          JIRA_KEY=$(echo "$BRANCH_NAME" | grep -oE '[A-Z]+-[0-9]+' | head -1)
+
+          if [ -z "$JIRA_KEY" ]; then
+            echo "⚠️  브랜치명에서 Jira 티켓을 찾을 수 없습니다: $BRANCH_NAME"
+            echo "has_ticket=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Jira 티켓 발견: $JIRA_KEY"
+            echo "has_ticket=true" >> $GITHUB_OUTPUT
+            echo "ticket=$JIRA_KEY" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get transition ID from config
+        id: get-transition
+        if: steps.extract-ticket.outputs.has_ticket == 'true'
+        run: |
+          if [ -f "scripts/jira/jira-workflow-config.json" ]; then
+            END_TRANSITION_ID=$(jq -r '.mappings.end // ""' scripts/jira/jira-workflow-config.json)
+            
+            if [ -n "$END_TRANSITION_ID" ] && [ "$END_TRANSITION_ID" != "null" ]; then
+              echo "transition_id=$END_TRANSITION_ID" >> $GITHUB_OUTPUT
+              echo "has_transition=true" >> $GITHUB_OUTPUT
+              echo "✅ Transition ID: $END_TRANSITION_ID"
+            else
+              echo "has_transition=false" >> $GITHUB_OUTPUT
+              echo "⚠️  jira-workflow-config.json에 'end' transition ID가 설정되지 않았습니다."
+            fi
+          else
+            echo "has_transition=false" >> $GITHUB_OUTPUT
+            echo "⚠️  jira-workflow-config.json 파일이 없습니다."
+          fi
+
+      - name: Transition Jira ticket to complete
+        if: steps.extract-ticket.outputs.has_ticket == 'true' && steps.get-transition.outputs.has_transition == 'true'
+        continue-on-error: true
+        run: |
+          ISSUE_KEY="${{ steps.extract-ticket.outputs.ticket }}"
+          TRANSITION_ID="${{ steps.get-transition.outputs.transition_id }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🎯 Jira 티켓 상태 변경 시작"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 Ticket: $ISSUE_KEY"
+          echo "🔄 Transition ID: $TRANSITION_ID"
+          echo "🔗 PR: #$PR_NUMBER"
+          echo ""
+
+          # Jira 티켓 상태 변경
+          TRANSITION_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -d "{\"transition\":{\"id\":\"${TRANSITION_ID}\"}}" \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/2/issue/${ISSUE_KEY}/transitions")
+
+          TRANSITION_HTTP_CODE=$(echo "$TRANSITION_RESPONSE" | tail -n 1)
+
+          if [ "$TRANSITION_HTTP_CODE" = "204" ] || [ "$TRANSITION_HTTP_CODE" = "200" ]; then
+            echo "✅ Jira 티켓 상태가 '완료'로 변경되었습니다"
+          else
+            echo "⚠️  Jira 상태 변경 실패 (HTTP $TRANSITION_HTTP_CODE)"
+            echo "응답: $(echo "$TRANSITION_RESPONSE" | head -n -1)"
+            echo ""
+            echo "💡 가능한 원인:"
+            echo "  - 이미 '완료' 상태인 티켓"
+            echo "  - 잘못된 transition ID (scripts/jira/jira-workflow-config.json 확인)"
+            echo "  - 워크플로우 권한 문제"
+          fi
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "💬 Jira 코멘트 추가 중..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          # Jira에 PR 머지 코멘트 추가
+          COMMENT_TEXT="🎉 PR이 develop 브랜치에 머지되었습니다\n\n*PR:* [#${PR_NUMBER} ${PR_TITLE}|${PR_URL}]\n*Branch:* \`${{ github.event.pull_request.head.ref }}\`\n*Merged by:* ${{ github.actor }}"
+
+          COMMENT_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -u "${{ secrets.JIRA_USER_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -d "{\"body\":\"${COMMENT_TEXT}\"}" \
+            "${{ secrets.JIRA_BASE_URL }}/rest/api/2/issue/${ISSUE_KEY}/comment")
+
+          COMMENT_HTTP_CODE=$(echo "$COMMENT_RESPONSE" | tail -n 1)
+
+          if [ "$COMMENT_HTTP_CODE" = "201" ] || [ "$COMMENT_HTTP_CODE" = "200" ]; then
+            echo "✅ Jira에 PR 머지 코멘트가 추가되었습니다"
+          else
+            echo "⚠️  코멘트 추가 실패 (HTTP $COMMENT_HTTP_CODE)"
+          fi
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ 완료!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      - name: Create summary
+        if: steps.extract-ticket.outputs.has_ticket == 'true'
+        run: |
+          ISSUE_KEY="${{ steps.extract-ticket.outputs.ticket }}"
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+
+          echo "## 🎉 Jira 자동 완료" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Jira Ticket:** [\`${ISSUE_KEY}\`](${{ secrets.JIRA_BASE_URL }}/browse/${ISSUE_KEY})" >> $GITHUB_STEP_SUMMARY
+          echo "**PR:** [#${PR_NUMBER}](${{ github.event.pull_request.html_url }})" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.event.pull_request.head.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.get-transition.outputs.has_transition }}" = "true" ]; then
+            echo "✅ Jira 티켓이 자동으로 완료 상태로 변경되었습니다." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️  Transition ID가 설정되지 않아 상태 변경을 건너뛰었습니다." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**설정 방법:** \`scripts/jira/jira-workflow-config.json\`에 \`end\` transition ID를 추가하세요." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Skip summary (no ticket)
+        if: steps.extract-ticket.outputs.has_ticket == 'false'
+        run: |
+          echo "## ℹ️ Jira 티켓 없음" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "브랜치명에서 Jira 티켓을 찾을 수 없어 자동 완료를 건너뛰었습니다." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.event.pull_request.head.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "💡 브랜치명 형식: \`AUR-123-description\` 또는 \`feature/AUR-123-description\`" >> $GITHUB_STEP_SUMMARY

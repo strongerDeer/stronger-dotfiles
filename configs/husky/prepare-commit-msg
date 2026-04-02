@@ -1,0 +1,16 @@
+#!/bin/sh
+# prepare-commit-msg: .gitmessage 템플릿을 커밋 에디터에 삽입
+# project-init 시 .husky/prepare-commit-msg 으로 복사됨
+# $1 = 커밋 메시지 파일 경로, $2 = 커밋 소스
+
+COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+
+# merge, squash, commit -c 등은 제외하고 일반 커밋에만 템플릿 적용
+if [ -z "$COMMIT_SOURCE" ] || [ "$COMMIT_SOURCE" = "template" ]; then
+  if [ -f .gitmessage ]; then
+    if [ ! -s "$COMMIT_MSG_FILE" ] || grep -q "^#" "$COMMIT_MSG_FILE"; then
+      cat .gitmessage > "$COMMIT_MSG_FILE"
+    fi
+  fi
+fi

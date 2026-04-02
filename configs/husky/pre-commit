@@ -1,0 +1,20 @@
+#!/bin/sh
+# pre-commit: 커밋 전 lint + type-check 실행
+# project-init 시 .husky/pre-commit 으로 복사됨
+
+# 패키지 매니저 자동 감지
+if [ -f "yarn.lock" ]; then
+  PM="yarn"
+elif [ -f "pnpm-lock.yaml" ]; then
+  PM="pnpm"
+else
+  PM="npm run"
+fi
+
+echo "🔍 Running lint checks..."
+$PM lint
+
+echo "🔎 Running type checks..."
+$PM type-check
+
+echo "✅ All checks passed!"
