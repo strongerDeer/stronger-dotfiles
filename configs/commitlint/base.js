@@ -34,7 +34,7 @@ module.exports = {
     'type-case': [0],
     'type-empty': [2, 'never'],
     'subject-empty': [2, 'never'],
-    'subject-case': [2, 'always', 'sentence-case'],
+    'subject-case': [0],
     'subject-full-stop': [2, 'never', '.'],
     'subject-max-length': [2, 'always', 200],
     'body-max-line-length': [2, 'always', 200],
@@ -62,7 +62,9 @@ module.exports = {
           const hasGitmoji = gitmojiPattern.test(parsed.raw);
           return [
             hasGitmoji,
-            hasGitmoji ? '' : '커밋 메시지는 gitmoji로 시작해야 합니다 (예: ✨ Feat:, 🐛 Fix:)',
+            hasGitmoji
+              ? ''
+              : '커밋 메시지는 gitmoji로 시작해야 합니다 (예: ✨ Feat:, 🐛 Fix:)',
           ];
         },
         'type-format': (parsed) => {
@@ -70,7 +72,9 @@ module.exports = {
           const hasCorrectFormat = typePattern.test(parsed.raw);
           return [
             hasCorrectFormat,
-            hasCorrectFormat ? '' : '타입 형식이 올바르지 않습니다 (예: ✨ Feat:, 🐛 Fix:)',
+            hasCorrectFormat
+              ? ''
+              : '타입 형식이 올바르지 않습니다 (예: ✨ Feat:, 🐛 Fix:)',
           ];
         },
       },

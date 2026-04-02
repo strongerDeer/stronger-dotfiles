@@ -1,9 +1,19 @@
 #!/bin/bash
 # 새 프로젝트에 dotfiles base config 설치
 # 사용법: project-init (shell 함수로 등록됨)
+# [변경] 중간 단계에서 실패해도 스크립트가 계속 실행되는 문제 방지
+set -e
 
 DOTFILES="${DOTFILES:-$HOME/dotfiles}"
 PROJECT_DIR="$(pwd)"
+
+# [변경] $DOTFILES가 없는 상태(setup.sh 미실행 또는 source ~/.zshrc 누락)에서
+#        실행하면 모든 cp 명령이 조용히 실패하므로 초기에 명시적으로 검증
+if [ ! -d "$DOTFILES" ]; then
+  echo "❌ DOTFILES 디렉토리를 찾을 수 없습니다: $DOTFILES"
+  echo "   setup.sh를 먼저 실행하고 'source ~/.zshrc'를 적용해 주세요."
+  exit 1
+fi
 
 echo "▶️  프로젝트 초기화: $PROJECT_DIR"
 echo ""

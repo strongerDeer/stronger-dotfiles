@@ -46,7 +46,10 @@ export default tseslint.config(
       // React
       'react/function-component-definition': [
         'error',
-        { namedComponents: 'arrow-function', unnamedComponents: 'arrow-function' },
+        {
+          namedComponents: 'arrow-function',
+          unnamedComponents: 'arrow-function',
+        },
       ],
       'react/react-in-jsx-scope': 'off',
       'react/jsx-props-no-spreading': 'off',
@@ -82,17 +85,17 @@ export default tseslint.config(
       ],
 
       // TypeScript
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-empty-interface': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/consistent-type-definitions': ['warn', 'type'],
+      '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       '@typescript-eslint/no-empty-object-type': 'off',
 
       // 일반
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
       'no-var': 'error',
-      'prefer-const': 'warn',
+      'prefer-const': 'error',
     },
   },
 

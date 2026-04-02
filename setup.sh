@@ -2,6 +2,7 @@
 # dotfiles 초기 설정 스크립트
 # 새 PC에서 한 번만 실행하면 됩니다.
 # 사용법: ./setup.sh
+set -e
 
 DOTFILES_DIR="$(cd "$(dirname "$0")" && pwd)"
 
