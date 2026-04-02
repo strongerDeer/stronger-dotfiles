@@ -40,6 +40,14 @@ dotfiles/
     functions.zsh                # shell 함수 (project-init 명령어)
   claude/
     CLAUDE.md                    # Claude Code 글로벌 컨벤션
+    skills/
+      docs/                      # JSDoc/Storybook/README 자동화 (/docs)
+      review/                    # 시니어 코드 리뷰 (/review)
+      perf/                      # 성능 분석 + Lighthouse (/perf)
+      jira/                      # Jira 자동화 (/jira)
+      api/                       # Swagger → 타입/훅 자동 생성 (/api)
+      ds/                        # 디자인 시스템 검증 (/ds)
+      seo/                       # SEO 최적화 자동화 (/seo)
   setup.sh                       # 새 PC 연동 스크립트
 ```
 
@@ -65,10 +73,11 @@ git pull origin main
 
 | 항목                  | 설명                                             |
 | --------------------- | ------------------------------------------------ |
-| `~/.claude/CLAUDE.md` | Claude Code 글로벌 컨벤션 (심볼릭 링크)          |
-| `~/.gitignore_global` | 전역 gitignore (심볼릭 링크)                     |
-| `~/.gitmessage`       | 커밋 메시지 템플릿 (심볼릭 링크)                 |
-| `~/.zshrc`            | `DOTFILES` 환경변수 + `project-init` 명령어 등록 |
+| `~/.claude/CLAUDE.md` | Claude Code 글로벌 컨벤션 (심볼릭 링크)                     |
+| `~/.claude/skills/`   | Claude 글로벌 스킬 8종 (심볼릭 링크)                        |
+| `~/.gitignore_global` | 전역 gitignore (심볼릭 링크)                                 |
+| `~/.gitmessage`       | 커밋 메시지 템플릿 (심볼릭 링크)                             |
+| `~/.zshrc`            | `DOTFILES` 환경변수 + `project-init`, `jira-open` 등 명령어 등록 |
 
 ### 3. 적용
 
@@ -254,3 +263,71 @@ git pull
 
 > Prettier는 런타임 참조 방식이라 `git pull`만 해도 즉시 반영됩니다.
 > ESLint 등 복사 방식 파일은 프로젝트에서 수동으로 업데이트해야 합니다.
+
+---
+
+## Shell 유틸리티
+
+`setup.sh` 실행 시 아래 명령어가 `~/.zshrc`에 자동 등록됩니다.
+
+| 명령어              | 설명                                                          |
+| ------------------- | ------------------------------------------------------------- |
+| `project-init`      | 새 프로젝트에 dotfiles base config 설치                       |
+| `jira-open`         | 현재 브랜치명에서 Jira 티켓 번호 추출 → 브라우저에서 열기    |
+| `amplify-status`    | AWS Amplify 최신 배포 상태 터미널에서 확인                    |
+| `jenkins-status`    | Jenkins 최신 빌드 상태 터미널에서 확인                        |
+
+### 환경변수 설정 (필요 시 `~/.zshrc`에 추가)
+
+```bash
+# Jira
+export JIRA_BASE_URL="https://your-company.atlassian.net"
+
+# AWS Amplify
+export AMPLIFY_APP_ID="your-app-id"
+export AMPLIFY_BRANCH="main"
+
+# Jenkins
+export JENKINS_URL="https://jenkins.your-company.com"
+export JENKINS_JOB="your-job-name"
+export JENKINS_USER="your-username"
+export JENKINS_TOKEN="your-api-token"
+```
+
+### Claude 스킬 (글로벌)
+
+`~/.claude/skills/`에 자동 연결. 모든 프로젝트에서 사용 가능.
+
+| 스킬   | 명령어    | 설명                                                           |
+| ------ | --------- | -------------------------------------------------------------- |
+| docs   | `/docs`   | JSDoc / Storybook / README 자동화                              |
+| review | `/review` | 시니어 관점 코드 리뷰 (보안/성능/아키텍처)                    |
+| perf   | `/perf`   | 성능 분석 + Lighthouse 자동화                                  |
+| jira   | `/jira`   | 이슈 생성·수정·상태전환·업무로그·주간요약. 멀티 프로젝트 지원 |
+| api    | `/api`    | Swagger → TypeScript 타입 + React Query 훅 자동 생성           |
+| ds     | `/ds`     | 디자인 시스템 컴플라이언스 검증                                |
+| seo    | `/seo`    | Next.js 메타태그 / JSON-LD 자동 생성                           |
+
+> 프로젝트 전용 스킬은 각 프로젝트 `.claude/skills/`에 별도 관리.
+
+### MCP 연동
+
+Claude Code 스킬에서 사용하는 외부 서비스 연동 방식.
+
+| 서비스     | 연결 방식             | 범위   | 비고                                    |
+| ---------- | --------------------- | ------ | --------------------------------------- |
+| Atlassian  | claude.ai OAuth 통합  | 글로벌 | `/jira` 스킬에서 사용. 계정에 귀속됨   |
+| Notion     | claude.ai OAuth 통합  | 글로벌 | 계정에 귀속됨                           |
+| Gmail      | claude.ai OAuth 통합  | 글로벌 | 계정에 귀속됨                           |
+
+**연결 방법**: claude.ai 웹 > Settings > Integrations에서 각 서비스 OAuth 연결
+
+> `~/.claude/settings.json`의 `mcpServers`가 아닌 **claude.ai 계정 기반 통합**이므로
+> 새 PC에서 `setup.sh` 실행 후 claude.ai 로그인만 하면 자동으로 사용 가능.
+> 인증 만료 시 claude.ai Settings > Integrations에서 재연결.
+
+---
+
+## 향후 개선 예정
+
+- [ ] **Storybook → Figma 연동**: `@storybook/addon-designs`로 Story에 Figma 링크 임베드. 디자이너와 Figma → Story 1:1 확인 프로세스로 QA 커뮤니케이션 감소.
